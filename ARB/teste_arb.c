@@ -127,6 +127,11 @@ int main(int argc, char * argv[]) {
     adicionar(39, &a);
     adicionar(36, &a);
     adicionar(33, &a);
+    remover(48, &a);
+    remover(45, &a);
+    remover(42, &a);
+    remover(60, &a);
+    remover(19, &a);
     // a = inserir(a, 7);
     // a = inserir(a, 9);
     // a = inserir(a, 10);

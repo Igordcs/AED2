@@ -19,7 +19,9 @@ void adicionar (int valor, arvore *raiz) ;
 void imprimir_elemento(arvore raiz);
 void rotacao_simples_direita(arvore *raiz, arvore pivo);
 void rotacao_simples_esquerda(arvore *raiz, arvore pivo);
-arvore remover (arvore raiz, int valor) ;
+void remover (int valor, arvore *raiz);
+void reajustar(arvore *raiz, arvore elemento);
+void retira_duplo_preto(arvore *raiz, arvore elemento);
 arvore podar (arvore raiz, int valor) ;
 
 void preorder(arvore raiz);
