@@ -2,46 +2,87 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-arvore no_null;
+arvore_rb no_null;
 
-void inicializar(arvore *raiz) {
+void inicializar_rb(arvore_rb *raiz) {
 	*raiz = NULL;
-	no_null = (arvore) malloc(sizeof(struct no_bst));
+	no_null = (arvore_rb) malloc(sizeof(struct no_rb));
 	no_null->cor = DUPLO_PRETO;
-	no_null->valor = 0;
+	no_null->dado = NULL;
     no_null->esq = NULL;
     no_null->dir = NULL;
     no_null->pai = NULL;
 }
 
-enum cor cor(arvore elemento) {
-    enum cor c;
+void imprimir_elemento_rb(arvore_rb raiz, tabela * tab) {
+	poke_info * temp = (poke_info *) malloc (sizeof(poke_info));
+    temp->poke_number = 1000;
+    printf("Indice: %d\n", raiz->dado->indice);
+    fseek(tab->arquivo_dados, raiz->dado->indice, SEEK_SET);
+
+    int r = fread(temp, sizeof(poke_info), 1, tab->arquivo_dados);
+	if(r != EOF) {
+        switch(raiz->cor){
+            case PRETO:
+                printf("\x1b[30m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
+                                    raiz->dado->chave,
+                                    temp->poke_name, 
+                                    temp->poke_total_status, 
+                                    temp->poke_type1, 
+                                    temp->poke_type2);
+                break;
+            case VERMELHO:
+                printf("\x1b[31m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
+                                    raiz->dado->chave,
+                                    temp->poke_name, 
+                                    temp->poke_total_status, 
+                                    temp->poke_type1, 
+                                    temp->poke_type2);
+                break;
+            case DUPLO_PRETO:
+                printf("\x1b[32m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
+                                    raiz->dado->chave,
+                                    temp->poke_name, 
+                                    temp->poke_total_status, 
+                                    temp->poke_type1, 
+                                    temp->poke_type2);
+                break;
+        }
+    }
+    else
+        printf("Falha ao ler dados");
+
+	free(temp);
+}
+
+cores cor(arvore_rb elemento) {
+    cores c;
     if(elemento == NULL)
         return PRETO;
     else return elemento->cor;
 }
 
-int eh_filho_esquerdo(arvore elemento) {
+int eh_filho_esquerdo(arvore_rb elemento) {
     return (elemento->pai != NULL && elemento == elemento->pai->esq);
 }
 
-int eh_raiz(arvore elemento) {
+int eh_raiz(arvore_rb elemento) {
     return elemento->pai == NULL;
 }
 
-arvore irmao(arvore elemento) {
+arvore_rb irmao(arvore_rb elemento) {
     if (eh_filho_esquerdo(elemento))
         return elemento->pai->dir;
     else
         return elemento->pai->esq;
 }
 
-arvore tio(arvore elemento) {
+arvore_rb tio(arvore_rb elemento) {
     return irmao(elemento->pai);
 }
 
 // Utiliza-se *raiz pois é um ponteiro para ponteiro, ou seja, manipulação por referência
-void ajustar(arvore *raiz, arvore elemento) {
+void ajustar(arvore_rb *raiz, arvore_rb elemento) {
     // Árvore desbalanceada pois o pai é rubro e o elemento adiiconado também
     while(cor(elemento->pai) == VERMELHO && cor(elemento) == VERMELHO) {
         // primeiro caso: O tio também é vermelho
@@ -87,12 +128,12 @@ void ajustar(arvore *raiz, arvore elemento) {
     (*raiz)->cor = PRETO;
 }
 
-void rotacao_simples_direita(arvore *raiz, arvore pivo) {
-    arvore u, t1;
+void rotacao_simples_direita(arvore_rb *raiz, arvore_rb pivo) {
+    arvore_rb u, t1;
     u = pivo->esq;
     t1 = u->dir;
 
-    // para atualizar a referência da raiz à sub-arvore resultante, é necessário
+    // para atualizar a referência da raiz à sub-arvore_rb resultante, é necessário
     // sabe se o pivo era filho esquerdo ou direito.
     int posicao_pivo = eh_filho_esquerdo(pivo);
 
@@ -114,12 +155,12 @@ void rotacao_simples_direita(arvore *raiz, arvore pivo) {
             u->pai->dir = u;
 } 
 
-void rotacao_simples_esquerda(arvore *raiz, arvore pivo) {
-    arvore u, t1;
+void rotacao_simples_esquerda(arvore_rb *raiz, arvore_rb pivo) {
+    arvore_rb u, t1;
     u = pivo->dir;
     t1 = u->esq;
 
-    // para atualizar a referência da raiz à sub-arvore resultante, é necessário
+    // para atualizar a referência da raiz à sub-arvore_rb resultante, é necessário
     // sabe se o pivo era filho esquerdo ou direito.
     int posicao_pivo = eh_filho_esquerdo(pivo);
 
@@ -141,30 +182,9 @@ void rotacao_simples_esquerda(arvore *raiz, arvore pivo) {
             u->pai->dir = u;
 }
 
-int qtdpar(arvore raiz) {
-    if (raiz == NULL)
-        return 0;
-
-    int contador = 0;
-    if (raiz->valor % 2 == 0) {
-        contador++;       
-    }
-    contador += qtdpar(raiz->esq);
-    contador += qtdpar(raiz->dir);
-    return contador;
-}
-
-void dobrar_valores(arvore raiz) {
-    if (raiz != NULL) {
-        raiz->valor *= 2;
-        dobrar_valores(raiz->dir);
-        dobrar_valores(raiz->esq);
-    }
-}
-
 // o parametro raiz é um ponteiro para ponteiro
-void adicionar (int valor, arvore *raiz){
-    arvore posicao, pai, novo;
+void adicionar_rb (tipo_dado *valor, arvore_rb *raiz){
+    arvore_rb posicao, pai, novo;
     posicao = *raiz;
     pai = NULL;
     
@@ -172,15 +192,15 @@ void adicionar (int valor, arvore *raiz){
     while (posicao != NULL)
     {
         pai = posicao;
-        if(valor > posicao->valor) 
+        if(valor->chave > posicao->dado->chave) 
             posicao = posicao->dir;
         else
             posicao = posicao->esq;
     }
 
     // alocar o novo elemento
-    novo = (arvore) malloc(sizeof(struct no_bst));
-    novo->valor = valor;
+    novo = (arvore_rb) malloc(sizeof(struct no_rb));
+    novo->dado = valor;
     novo->cor = VERMELHO;
     novo->esq = NULL;
     novo->dir = NULL;
@@ -188,10 +208,11 @@ void adicionar (int valor, arvore *raiz){
 
     // Se o elemento for a raiz, então o ponteiro da raiz aponta para o elemento
     if(eh_raiz(novo)){
+        novo->cor = PRETO;
         *raiz = novo;
     } else {
         // se o novo elemento não for a raiz, é necessário fazer a ligação dele com seu pai
-        if (valor > pai->valor)
+        if (valor->chave > pai->dado->chave)
             pai->dir = novo;
         else
             pai->esq = novo;
@@ -201,40 +222,39 @@ void adicionar (int valor, arvore *raiz){
     ajustar(raiz, novo);
 }
 
-int maior_elemento(arvore raiz) {
+tipo_dado* maior_elemento(arvore_rb raiz) {
     if(raiz == NULL)
-        return -1;
+        return NULL;
     if(raiz->dir == NULL)
-        return raiz->valor;
+        return raiz->dado;
     else
         return maior_elemento(raiz->dir);
 }
 
-void remover (int valor, arvore *raiz) {
-    arvore posicao;
+void remover_rb (int chave, arvore_rb *raiz) {
+    arvore_rb posicao;
     posicao = *raiz;
 
     while (posicao != NULL)
     {
-        if (valor == posicao->valor) {
+        if (chave == posicao->dado->chave) {
             // ELEMENTO POSSUI DOIS FILHOS, LOGO, SUBSTITUI O VALOR PELO SUCESSOR E APAGA O SUCESSOR.
             if(posicao->esq != NULL && posicao->dir != NULL) {
-                posicao->valor = maior_elemento(posicao->esq);
-                remover(posicao->valor, &(posicao->esq));
+                posicao->dado = maior_elemento(posicao->esq);
+                remover_rb(posicao->dado->chave, &(posicao->esq));
             }
+            
         
             // 1º caso: elemento não tem filho
             if (posicao->esq == NULL && posicao->dir == NULL){
                 // só existe o nó raiz
                 if(eh_raiz(posicao)){
-                    printf("chegou aqui");
                     *raiz = NULL;
                     free(posicao);
                     break;
                 }
                 // Se o elemento nao tem filhos e é vermelho, basta removê-lo
                 if(posicao->cor == VERMELHO) {
-                    printf("chegou aqui");
                     if(eh_filho_esquerdo(posicao))
                         posicao->pai->esq = NULL;
                     else
@@ -285,16 +305,14 @@ void remover (int valor, arvore *raiz) {
                 break;
             }
         }
-        if(valor > posicao->valor){
+        if(chave > posicao->dado->chave)
             posicao = posicao->dir;
-            printf("entrou aqui");
-        }
         else
             posicao = posicao->esq;
     }
 }
 
-void reajustar(arvore *raiz, arvore elemento) {
+void reajustar(arvore_rb *raiz, arvore_rb elemento) {
     // Elemento é raiz, não pode ser da cor vermelha
     if (eh_raiz(elemento)) {
         elemento->cor = PRETO;
@@ -406,210 +424,12 @@ void reajustar(arvore *raiz, arvore elemento) {
     }
 }
 
-void retira_duplo_preto(arvore *raiz, arvore elemento) {
-			if(elemento == no_null)
-				if(eh_filho_esquerdo(elemento))
-						elemento->pai->esq = NULL;
-				else
-						elemento->pai->dir = NULL;
-			else
-				elemento->cor = PRETO;
-}
-
-void reverso(arvore raiz){
-    if(raiz != NULL) {
-        reverso(raiz->dir);
-        imprimir_elemento(raiz);
-        reverso(raiz->esq);
-    }
-}
-
-void preorder(arvore raiz){
-    //caso indutivo...
-    if(raiz != NULL) {
-        //pre-order: processa raiz, depois esq e direita
-        imprimir_elemento(raiz);
-
-        //... chamadas recursivas
-        preorder(raiz->esq);
-        preorder(raiz->dir);
-    }
-
-    //caso base, fim da recursão
-    else {
-        //imprimir uma árvore vazia é não fazer nada
-    }
-}
-
-void inorder(arvore raiz){
-    if(raiz != NULL) {
-        inorder(raiz->esq);
-        imprimir_elemento(raiz);
-        inorder(raiz->dir);
-    }
-}
-
-void imprimir_elemento(arvore raiz) {
-	switch(raiz->cor){
-		case PRETO:
-			printf("\x1b[30m[%d]\x1b[0m", raiz->valor);
-			break;
-		case VERMELHO:
-			printf("\x1b[31m[%d]\x1b[0m", raiz->valor);
-			break;
-		case DUPLO_PRETO:
-			printf("\x1b[32m[%d]\x1b[0m", raiz->valor);
-			break;
-	}
-}
-
-void descendentes(arvore raiz, int valor) {
-    if(raiz == NULL)
-        return;
-
-    if (valor > raiz->valor) 
-        return descendentes(raiz->dir, valor);
-    else if(valor < raiz->valor) 
-        return descendentes(raiz->esq, valor);
-    else {
-        inorder(raiz->esq);
-        inorder(raiz->dir);
-    }
-}
-
-void antecessor(arvore raiz, int valor) {
-    if(raiz == NULL) {
-        printf("-1\n");
-        return;
-    }
-
-    if (busca(raiz, valor) == 0){
-        printf("-1\n");
-        return;
-    }
-
-    arvore temp, candidato;
-    temp = raiz;
-    candidato = NULL;
-
-    if (temp->valor == valor) {
-        temp = temp->esq;
-    }
-
-    while(temp && temp->valor != valor) {
-        if(valor > temp->valor){
-            candidato = temp;
-            temp = temp->dir;
-        }else {
-            temp = temp->esq;
-        }
-    }
-
-    if(temp->valor == valor || temp == NULL){
-        printf("-1\n");
-        return;
-    }
-    
-    printf("%d\n", candidato->valor);
-}
-
-arvore podar(arvore raiz, int valor) {
-    if (raiz == NULL)
-        return NULL;
-
-    if (valor > raiz->valor)
-        raiz->dir = podar(raiz->dir, valor);
-    else if(valor < raiz->valor)
-        raiz->esq = podar(raiz->esq, valor);
-    else {
-        podar(raiz->esq, valor);
-        podar(raiz->dir, valor);
-        free(raiz);
-        return NULL;
-    }
-    return raiz;
-}
-
-
-void posorder(arvore raiz) {
-    if(raiz != NULL) {
-        posorder(raiz->esq);
-        posorder(raiz->dir);
-        printf("[%d]", raiz->valor);
-    }
-}
-
-/*int somatorio(arvore raiz){
-    int soma = 0;
-
-    if(raiz != NULL) {
-        soma += raiz->valor +
-            somatorio(raiz->esq) +
-            somatorio(raiz->dir);
-    }
-    return soma;
-}*/
-
-int somatorio(arvore raiz){
-    return (raiz==NULL) ? 0 : raiz->valor + somatorio(raiz->esq) + somatorio(raiz->dir);
-}
-
-int altura(arvore raiz){
-    if (raiz == NULL)
-        return -1;
-
-    int esq = altura(raiz->esq);
-    int dir = altura(raiz->dir);
-    
-    if (esq > dir)
-        return esq + 1;
-    else return dir + 1;
-}
-
-int somaPar(arvore raiz) {
-    if (raiz == NULL)
-        return 0;
-
-    int somador = 0;
-    if (raiz->valor % 2 == 0) {
-        somador += raiz->valor;                         
-    }
-    somador += somaPar(raiz->esq);
-    somador += somaPar(raiz->dir);
-    return somador;
-}
-
-int busca(arvore raiz, int valor) {
-    if (raiz == NULL)
-        return 0;
-    
-    if(raiz->valor == valor)
-        return 1;
-    
-    if (valor > raiz->valor)
-        return busca(raiz->dir, valor);
+void retira_duplo_preto(arvore_rb *raiz, arvore_rb elemento) {
+    if(elemento == no_null)
+        if(eh_filho_esquerdo(elemento))
+            elemento->pai->esq = NULL;
+        else
+            elemento->pai->dir = NULL;
     else
-        return busca(raiz->esq, valor);
+        elemento->cor = PRETO;
 }
-
-void pai(arvore raiz, int valor) {
-    if (raiz == NULL){
-        printf("-1\n");
-        return;
-    }
-
-    if(raiz->esq != NULL && raiz->esq->valor == valor){
-        printf("%d\n", raiz->valor);
-        return;
-    }
-    else if(raiz->dir != NULL && raiz->dir->valor == valor){
-        printf("%d\n", raiz->valor);
-        return;
-    }
-
-    if (valor > raiz->valor)
-        return pai(raiz->dir, valor);
-    else
-        return pai(raiz->esq, valor);
-}
-
