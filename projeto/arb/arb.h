@@ -10,4 +10,6 @@ void rotacao_simples_esquerda(arvore_rb *raiz, arvore_rb pivo);
 void reajustar(arvore_rb *raiz, arvore_rb elemento);
 void retira_duplo_preto(arvore_rb *raiz, arvore_rb elemento);
 void imprimir_elemento_rb(arvore_rb raiz, tabela * tab);
+void salvar_auxiliar_rb(arvore_rb raiz, FILE *arq);
+void in_order_rb(arvore_rb raiz, tabela *tab);
 #endif

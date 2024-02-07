@@ -15,7 +15,7 @@ int main(void) {
                 adicionar_pokemon(&tb, ler_dados());
                 break;
             case 2: // Imprimir elementos
-                in_order(tb.indice_rb, &tb);
+                in_order(&tb);
                 break;
             case 3: // BUSCAR ELEMENTO
                 scanf("%d", &chave);

@@ -113,12 +113,10 @@ void tirar_enter(char *string){
     string[strlen(string) - 1] = '\0';
 }
 
-void in_order(arvore_rb raiz, tabela *tab) {
-	if(raiz != NULL) {
-		in_order(raiz->esq, tab);
-		imprimir_elemento_rb(raiz, tab);
-		in_order(raiz->dir, tab);
-	}
+void in_order(tabela *tab) {
+	in_order_bst(tab->indice_bst, tab);
+	in_order_avl(tab->indice_avl, tab);
+	in_order_rb(tab->indice_rb, tab);
 }
 
 void adicionar_pokemon(tabela *tabela, poke_info *pokemon) {
@@ -143,30 +141,6 @@ void adicionar_pokemon(tabela *tabela, poke_info *pokemon) {
 
     FEITO!!
 */  
-
-void salvar_auxiliar_bst(arvore_bst raiz, FILE *arq) {
-    if(raiz != NULL) {
-        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
-        salvar_auxiliar_bst(raiz->esq, arq);
-        salvar_auxiliar_bst(raiz->dir, arq);
-    }
-}
-
-void salvar_auxiliar_avl(arvore_avl raiz, FILE *arq) {
-    if(raiz != NULL) {
-        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
-        salvar_auxiliar_avl(raiz->esq, arq);
-        salvar_auxiliar_avl(raiz->dir, arq);
-    }
-}
-
-void salvar_auxiliar_rb(arvore_rb raiz, FILE *arq) {
-    if(raiz != NULL) {
-        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
-        salvar_auxiliar_rb(raiz->esq, arq);
-        salvar_auxiliar_rb(raiz->dir, arq);
-    }
-}
 
 void salvar_arquivo(tabela *tab) {
     FILE *arq;

@@ -433,3 +433,19 @@ void retira_duplo_preto(arvore_rb *raiz, arvore_rb elemento) {
     else
         elemento->cor = PRETO;
 }
+
+void salvar_auxiliar_rb(arvore_rb raiz, FILE *arq) {
+    if(raiz != NULL) {
+        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
+        salvar_auxiliar_rb(raiz->esq, arq);
+        salvar_auxiliar_rb(raiz->dir, arq);
+    }
+}
+
+void in_order_rb(arvore_rb raiz, tabela *tab) {
+	if(raiz != NULL) {
+		in_order_rb(raiz->esq, tab);
+		imprimir_elemento_rb(raiz, tab);
+		in_order_rb(raiz->dir, tab);
+	}
+}

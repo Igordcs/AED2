@@ -71,6 +71,22 @@ arvore_bst remover_bst (arvore_bst raiz, int chave) {
     return raiz;
 }
 
+void in_order_bst(arvore_bst raiz, tabela *tab) {
+	if(raiz != NULL) {
+		in_order_bst(raiz->esq, tab);
+		imprimir_elemento_bst(raiz, tab);
+		in_order_bst(raiz->dir, tab);
+	}
+}
+
+void salvar_auxiliar_bst(arvore_bst raiz, FILE *arq) {
+    if(raiz != NULL) {
+        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
+        salvar_auxiliar_bst(raiz->esq, arq);
+        salvar_auxiliar_bst(raiz->dir, arq);
+    }
+}
+
 void imprimir_elemento_bst(arvore_bst raiz, tabela * tab) {
 	poke_info * temp = (poke_info *) malloc (sizeof(poke_info));
     temp->poke_number = 1000;

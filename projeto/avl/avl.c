@@ -307,6 +307,22 @@ void pai(arvore_avl raiz, int chave) {
         return pai(raiz->esq, chave);
 }
 
+void in_order_avl(arvore_avl raiz, tabela *tab) {
+	if(raiz != NULL) {
+		in_order_avl(raiz->esq, tab);
+		imprimir_elemento_avl(raiz, tab);
+		in_order_avl(raiz->dir, tab);
+	}
+}
+
+void salvar_auxiliar_avl(arvore_avl raiz, FILE *arq) {
+    if(raiz != NULL) {
+        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
+        salvar_auxiliar_avl(raiz->esq, arq);
+        salvar_auxiliar_avl(raiz->dir, arq);
+    }
+}
+
 void imprimir_elemento_avl(arvore_avl raiz, tabela * tab) {
 	poke_info * temp = (poke_info *) malloc (sizeof(poke_info));
     temp->poke_number = 1000;

@@ -48,7 +48,7 @@ typedef struct tabela {
 poke_info* ler_dados();
 
 void adicionar_pokemon(tabela *tabela, poke_info *pokemon);
-void in_order(arvore_rb raiz, tabela *tab);
+void in_order(tabela *tab);
 void tirar_enter(char *string);
 void salvar_arquivo(tabela *tab);
 void finalizar(tabela *tabela);
