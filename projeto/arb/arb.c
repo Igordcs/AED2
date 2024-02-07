@@ -241,9 +241,9 @@ void remover_rb (int chave, arvore_rb *raiz) {
             // ELEMENTO POSSUI DOIS FILHOS, LOGO, SUBSTITUI O VALOR PELO SUCESSOR E APAGA O SUCESSOR.
             if(posicao->esq != NULL && posicao->dir != NULL) {
                 posicao->dado = maior_elemento(posicao->esq);
-                remover_rb(posicao->dado->chave, &(posicao->esq));
+                chave = posicao->dado->chave;
+                break;
             }
-            
         
             // 1º caso: elemento não tem filho
             if (posicao->esq == NULL && posicao->dir == NULL){
