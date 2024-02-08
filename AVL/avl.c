@@ -50,8 +50,8 @@ arvore rotacao(arvore pivo) {
                 pivo->fb = 0;
                 pivo->dir->fb = 0;
             } else if(pivo->dir->esq->fb == -1) {
-                pivo->dir->fb = 1;
                 pivo->fb = 0;
+                pivo->dir->fb = 1;
             } else if (pivo->dir->esq->fb == 1) {
                 pivo->fb = -1;
                 pivo->dir->fb = 0;
@@ -129,11 +129,12 @@ arvore inserir (arvore raiz, int valor, int *cresceu){
     else {
         if(valor > raiz->valor) {
             raiz->dir = inserir(raiz->dir, valor, cresceu);
-            if(*cresceu == 1) {
+            if(*cresceu) {
                 switch (raiz->fb)
                 {
                     case 0:
                         raiz->fb = 1;
+                        *cresceu = 1;
                     break;
                     case 1:
                         *cresceu = 0;
@@ -149,11 +150,12 @@ arvore inserir (arvore raiz, int valor, int *cresceu){
             }
         } else {
             raiz->esq = inserir(raiz->esq, valor, cresceu);
-            if(*cresceu == 1) {
+            if(*cresceu) {
                 switch (raiz->fb)
                 {
                     case 0:
                         raiz->fb = -1;
+                        *cresceu = 1;
                     break;
                     case 1:
                         raiz->fb = 0;
@@ -173,69 +175,27 @@ arvore inserir (arvore raiz, int valor, int *cresceu){
 }
 
 arvore remover (arvore raiz, int valor, int *diminuiu) {
-    if (raiz == NULL)
+    printf("status: [%d:%d] \n", raiz->valor, raiz->fb);
+    if (raiz == NULL) {
+        *diminuiu = 0;
         return raiz;
-
-    if (valor > raiz->valor){
-        raiz->dir = remover(raiz->dir, valor, diminuiu);
-        if(*diminuiu) {
-            switch (raiz->fb)
-            {
-            case 0:
-                raiz->fb = -1;
-                *diminuiu = 0;
-            break;
-            case 1:
-                raiz->fb = 0;
-                *diminuiu = 1;
-            break;
-            case -1:
-                return rotacao(raiz);
-            break;
-            default:
-                break;
-            }
-        }
     }
 
-    else if (valor < raiz->valor) {
-        raiz->esq = remover(raiz->esq, valor, diminuiu);
-        if(*diminuiu) {
-            switch (raiz->fb)
-            {
-            case 0:
-                raiz->fb = 1;
-                *diminuiu = 0;
-            break;
-            case 1:
-                return rotacao(raiz);
-            break;
-            case -1:
-                raiz->fb = 0;
-                *diminuiu = 1;
-            break;
-            default:
-                break;
-            }
-        }
-    }
-    else {
+    if (valor == raiz->valor) {
+        *diminuiu = 1;
         // 1º caso: elemento não tem filho
         if (raiz->esq == NULL && raiz->dir == NULL){
-            *diminuiu = 1;
             free(raiz);
             return NULL;
         }
         // 2º caso: elemento possui 1 filho
         if(raiz->esq != NULL && raiz->dir == NULL) {
-            *diminuiu = 1;
             arvore aux = raiz->esq;
             free(raiz);
             return aux;
         }
         // 2º caso: elemento possui 1 filho (SIMÉTRICO)
         if(raiz->esq == NULL && raiz->dir != NULL) {
-            *diminuiu = 1;
             arvore aux = raiz->dir;
             free(raiz);
             return aux;
@@ -251,9 +211,66 @@ arvore remover (arvore raiz, int valor, int *diminuiu) {
             raiz->valor = aux->valor;
             aux->valor = valor;
             raiz->esq = remover(raiz->esq, valor, diminuiu);
+            if(*diminuiu) {
+                if(raiz->fb == -1) {
+                    raiz->fb = 0;
+                    *diminuiu = 0;
+                } else if (raiz->fb == 0) {
+                    raiz->fb = 1;
+                    *diminuiu = 0;
+                } 
+            }
+        }
+    } else {
+        if (valor < raiz->valor) {
+            raiz->esq = remover(raiz->esq, valor, diminuiu);
+            if(*diminuiu) {
+                switch (raiz->fb)
+                {
+                case 0:
+                    raiz->fb = 1;
+                    *diminuiu = 0;
+                break;
+                case 1:
+                    if(raiz->dir->fb == 0) {
+                        *diminuiu = 0;
+                    } else *diminuiu = 1;
+                    return rotacao(raiz);
+                break;
+                case -1:
+                    raiz->fb = 0;
+                    *diminuiu = 1;
+                break;
+                default:
+                    break;
+                }
+            }
+        }
+        if (valor > raiz->valor){
+            raiz->dir = remover(raiz->dir, valor, diminuiu);
+            if(*diminuiu) {
+                switch (raiz->fb)
+                {
+                case 0:
+                    raiz->fb = -1;
+                    *diminuiu = 0;
+                break;
+                case 1:
+                    raiz->fb = 0;
+                    *diminuiu = 1;
+                break;
+                case -1:
+                    if(raiz->esq->fb == 0) {
+                        *diminuiu = 0;
+                    }else *diminuiu = 1;
+                    return rotacao(raiz);
+                break;
+                default:
+                    break;
+                }
+            }
         }
     }
-
     return raiz;
 }
 void reverso(arvore raiz){
@@ -268,7 +285,7 @@ void preorder(arvore raiz){
     //caso indutivo...
     if(raiz != NULL) {
         //pre-order: processa raiz, depois esq e direita
-        printf("[%d]", raiz->valor);
+        printf("[%d], fb: %d; ", raiz->valor, raiz->fb);
 
         //... chamadas recursivas
         preorder(raiz->esq);
@@ -438,4 +455,3 @@ void pai(arvore raiz, int valor) {
     else
         return pai(raiz->esq, valor);
 }
-
