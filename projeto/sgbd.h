@@ -4,7 +4,7 @@
 
 typedef enum cores {VERMELHO, PRETO, DUPLO_PRETO} cores;
 
-typedef struct pokemon {
+typedef struct poke_info {
     int poke_number;
     int poke_total_status;
     char poke_name[80];
@@ -17,13 +17,23 @@ typedef struct indice {
     int indice;
 } tipo_dado;
 
+typedef struct indice_avl {
+    char poke_name[80];
+    int indice; 
+} tipo_dado_avl;
+
+typedef struct indice_rb {
+    char poke_name[80];
+    int indice; 
+} tipo_dado_avl;
+
 typedef struct no_bst {
     tipo_dado *dado;
     struct no_bst *esq, *dir;
 } no_bst;
 
 typedef struct no_avl {
-    tipo_dado *dado;
+    tipo_dado_avl *dado;
     int fb;
     struct no_avl *esq, *dir;
 } no_avl;

@@ -242,7 +242,6 @@ void remover_rb (int chave, arvore_rb *raiz) {
             if(posicao->esq != NULL && posicao->dir != NULL) {
                 posicao->dado = maior_elemento(posicao->esq);
                 chave = posicao->dado->chave;
-                break;
             }
         
             // 1º caso: elemento não tem filho
@@ -346,10 +345,7 @@ void reajustar(arvore_rb *raiz, arvore_rb elemento) {
         cor(irmao(elemento)->dir) == PRETO) {
         irmao(elemento)->cor = VERMELHO;
         elemento->pai->cor = DUPLO_PRETO;
-        if(eh_filho_esquerdo(elemento))
-            elemento->pai->esq = NULL;
-        else
-            elemento->pai->dir = NULL;
+        retira_duplo_preto(raiz, elemento);
         // pai vira duplo_preto e propaga essa mudança
         reajustar(raiz, elemento->pai);
         return;

@@ -219,22 +219,20 @@ void remover (int valor, arvore *raiz) {
         if (valor == posicao->valor) {
             // ELEMENTO POSSUI DOIS FILHOS, LOGO, SUBSTITUI O VALOR PELO SUCESSOR E APAGA O SUCESSOR.
             if(posicao->esq != NULL && posicao->dir != NULL) {
-                posicao->valor = maior_elemento(posicao->esq);
-                remover(posicao->valor, &(posicao->esq));
+                 posicao->valor = maior_elemento(posicao->esq);
+                 valor = posicao->valor;
             }
         
             // 1º caso: elemento não tem filho
             if (posicao->esq == NULL && posicao->dir == NULL){
                 // só existe o nó raiz
                 if(eh_raiz(posicao)){
-                    printf("chegou aqui");
                     *raiz = NULL;
                     free(posicao);
                     break;
                 }
                 // Se o elemento nao tem filhos e é vermelho, basta removê-lo
                 if(posicao->cor == VERMELHO) {
-                    printf("chegou aqui");
                     if(eh_filho_esquerdo(posicao))
                         posicao->pai->esq = NULL;
                     else
@@ -287,9 +285,7 @@ void remover (int valor, arvore *raiz) {
         }
         if(valor > posicao->valor){
             posicao = posicao->dir;
-            printf("entrou aqui");
-        }
-        else
+        }else
             posicao = posicao->esq;
     }
 }
@@ -328,10 +324,7 @@ void reajustar(arvore *raiz, arvore elemento) {
         cor(irmao(elemento)->dir) == PRETO) {
         irmao(elemento)->cor = VERMELHO;
         elemento->pai->cor = DUPLO_PRETO;
-        if(eh_filho_esquerdo(elemento))
-            elemento->pai->esq = NULL;
-        else
-            elemento->pai->dir = NULL;
+        retira_duplo_preto(raiz, elemento);
         // pai vira duplo_preto e propaga essa mudança
         reajustar(raiz, elemento->pai);
         return;

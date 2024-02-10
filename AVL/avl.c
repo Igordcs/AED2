@@ -175,7 +175,6 @@ arvore inserir (arvore raiz, int valor, int *cresceu){
 }
 
 arvore remover (arvore raiz, int valor, int *diminuiu) {
-    printf("status: [%d:%d] \n", raiz->valor, raiz->fb);
     if (raiz == NULL) {
         *diminuiu = 0;
         return raiz;

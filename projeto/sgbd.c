@@ -23,14 +23,15 @@ void inicializar_indices(tabela *tab) {
 
 void carregar_arquivos(tabela *tab) {
     tipo_dado *temp;
+    tipo_dado_avl *temp_avl;
     FILE *arq;
     arq = fopen("indices_avl.dat", "rb");
-    int cresceu;
     if(arq != NULL) {
-        temp = (tipo_dado*) malloc(sizeof(tipo_dado));
-        while(fread(temp, sizeof(tipo_dado), 1, arq)) {
-            tab->indice_avl = inserir_avl(tab->indice_avl, temp, &cresceu);
-            temp = (tipo_dado*) malloc(sizeof(tipo_dado));
+        int cresceu;
+        temp_avl = (tipo_dado_avl*) malloc(sizeof(tipo_dado_avl));
+        while(fread(temp_avl, sizeof(tipo_dado_avl), 1, arq)) {
+            tab->indice_avl = inserir_avl(tab->indice_avl, temp_avl, &cresceu);
+            temp_avl = (tipo_dado_avl*) malloc(sizeof(tipo_dado_avl));
         }
         fclose(arq);
     }
@@ -72,17 +73,17 @@ int inicializar_tabela(tabela *tabela) {
         return -1;
 }
 
-void adicionar_indice(tabela *tab, tipo_dado *novo) {
-    int cresceu;
-    tab->indice_bst = inserir_bst(tab->indice_bst, novo);
-    tab->indice_avl = inserir_avl(tab->indice_avl, novo, &cresceu);
-    adicionar_rb(novo, &(tab->indice_rb));
-}
+// void adicionar_indice(tabela *tab, tipo_dado *novo) {
+//     int cresceu;
+//     tab->indice_bst = inserir_bst(tab->indice_bst, novo);
+//     tab->indice_avl = inserir_avl(tab->indice_avl, novo, &cresceu);
+//     adicionar_rb(novo, &(tab->indice_rb));
+// }
 
 void remover_indice(tabela *tab, int chave) {
     int diminuiu;
     tab->indice_bst = remover_bst(tab->indice_bst, chave);
-    tab->indice_avl = remover_avl(tab->indice_avl, chave, &diminuiu);
+    // tab->indice_avl = remover_avl(tab->indice_avl, chave, &diminuiu);
     remover_rb(chave, &(tab->indice_rb));
 }
 
@@ -119,18 +120,26 @@ void in_order(tabela *tab) {
 	in_order_rb(tab->indice_rb, tab);
 }
 
-void adicionar_pokemon(tabela *tabela, poke_info *pokemon) {
-    if (tabela->arquivo_dados != NULL) {
+void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
+    if (tab->arquivo_dados != NULL) {
         tipo_dado *novo_dado = (tipo_dado *) malloc(sizeof(tipo_dado));
+        tipo_dado_avl *novo_avl = (tipo_dado_avl *) malloc(sizeof(tipo_dado_avl));
+        // copia o conteúdo de pokemon->pokename para o novo_avl
+        strcpy(novo_avl->poke_name, pokemon->poke_name);
         novo_dado->chave = pokemon->poke_number;
 
         // desloca o fluxo para o fim do arquivo
-        fseek(tabela->arquivo_dados, 0L, SEEK_END);
-        novo_dado->indice = ftell(tabela->arquivo_dados);
+        fseek(tab->arquivo_dados, 0L, SEEK_END);
+        novo_dado->indice = ftell(tab->arquivo_dados);
+        novo_avl->indice = ftell(tab->arquivo_dados);
 
-        fwrite(pokemon, sizeof(poke_info), 1, tabela->arquivo_dados);
+        fwrite(pokemon, sizeof(poke_info), 1, tab->arquivo_dados);
         // Chama a função responsável por adicionar em cada índice
-        adicionar_indice(tabela, novo_dado);
+        int cresceu;
+        tab->indice_bst = inserir_bst(tab->indice_bst, novo_dado);
+        tab->indice_avl = inserir_avl(tab->indice_avl, novo_avl, &cresceu);
+        adicionar_rb(novo_dado, &(tab->indice_rb));
+        // adicionar_indice(tabela, novo_dado);
     }
 }
 
@@ -178,11 +187,11 @@ void busca(tabela *tab, arvore_avl raiz, int chave) {
     if (raiz == NULL)
         return;
     
-    if(raiz->dado->chave == chave)
+    if(raiz->dado->indice == chave)
         // imprimir_elemento(raiz, tab);
         
     
-    if (chave > raiz->dado->chave)
+    if (chave > raiz->dado->indice)
         busca(tab, raiz->dir, chave);
     else
         busca(tab, raiz->esq, chave);

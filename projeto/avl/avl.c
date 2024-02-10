@@ -1,6 +1,7 @@
 #include "avl.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 
 void inicializar_avl(arvore_avl *raiz) {
     *raiz = NULL;
@@ -94,7 +95,7 @@ arvore_avl rotacao(arvore_avl pivo) {
     return pivo;
 }
 
-arvore_avl inserir_avl (arvore_avl raiz, tipo_dado *valor, int *cresceu){
+arvore_avl inserir_avl (arvore_avl raiz, tipo_dado_avl *valor, int *cresceu){
     //caso base
     if(raiz == NULL) {
         //1. Alocar espaço em memória
@@ -110,7 +111,7 @@ arvore_avl inserir_avl (arvore_avl raiz, tipo_dado *valor, int *cresceu){
     }
     //caso indutivo
     else {
-        if(valor->chave > raiz->dado->chave) {
+        if(strcmp(valor->poke_name, raiz->dado->poke_name) > 0) {
             raiz->dir = inserir_avl(raiz->dir, valor, cresceu);
             if(*cresceu == 1) {
                 switch (raiz->fb)
@@ -155,70 +156,27 @@ arvore_avl inserir_avl (arvore_avl raiz, tipo_dado *valor, int *cresceu){
     }
 }
 
-arvore_avl remover_avl (arvore_avl raiz, int chave, int *diminuiu) {
-    if (raiz == NULL)
+arvore_avl remover_avl (arvore_avl raiz, char *valor, int *diminuiu) {
+    if (raiz == NULL) {
+        *diminuiu = 0;
         return raiz;
-
-    if (chave > raiz->dado->chave){
-        raiz->dir = remover_avl(raiz->dir, chave, diminuiu);
-        if(*diminuiu) {
-            switch (raiz->fb)
-            {
-            case 0:
-                raiz->fb = -1;
-                *diminuiu = 0;
-            break;
-            case 1:
-                raiz->fb = 0;
-                *diminuiu = 1;
-            break;
-            case -1:
-                return rotacao(raiz);
-            break;
-            default:
-                break;
-            }
-        }
     }
 
-    else if (chave < raiz->dado->chave) {
-        raiz->esq = remover_avl(raiz->esq, chave, diminuiu);
-        if(*diminuiu) {
-            switch (raiz->fb)
-            {
-            case 0:
-                raiz->fb = 1;
-                *diminuiu = 0;
-            break;
-            case 1:
-                return rotacao(raiz);
-            break;
-            case -1:
-                raiz->fb = 0;
-                *diminuiu = 1;
-            break;
-            default:
-                break;
-            }
-        }
-    }
-    else {
+    if (strcmp(valor, raiz->dado->poke_name) == 0) {
+        *diminuiu = 1;
         // 1º caso: elemento não tem filho
         if (raiz->esq == NULL && raiz->dir == NULL){
-            *diminuiu = 1;
             free(raiz);
             return NULL;
         }
         // 2º caso: elemento possui 1 filho
         if(raiz->esq != NULL && raiz->dir == NULL) {
-            *diminuiu = 1;
             arvore_avl aux = raiz->esq;
             free(raiz);
             return aux;
         }
         // 2º caso: elemento possui 1 filho (SIMÉTRICO)
         if(raiz->esq == NULL && raiz->dir != NULL) {
-            *diminuiu = 1;
             arvore_avl aux = raiz->dir;
             free(raiz);
             return aux;
@@ -231,12 +189,71 @@ arvore_avl remover_avl (arvore_avl raiz, int chave, int *diminuiu) {
                 aux = aux->dir;
             }
             // troca o valor da raiz com o aux
-            raiz->dado = aux->dado;
-            aux->dado->chave = chave;
-            raiz->esq = remover_avl(raiz->esq, chave, diminuiu);
+            strcpy(raiz->dado->poke_name, aux->dado->poke_name);
+            strcpy(aux->dado->poke_name, valor);
+            // raiz->dado->poke_name = aux->dado->poke_name;
+            // aux->dado->poke_name = valor;
+            raiz->esq = remover_avl(raiz->esq, valor, diminuiu);
+            if(*diminuiu) {
+                if(raiz->fb == -1) {
+                    raiz->fb = 0;
+                    *diminuiu = 0;
+                } else if (raiz->fb == 0) {
+                    raiz->fb = 1;
+                    *diminuiu = 0;
+                } 
+            }
+        }
+    } else {
+        if (strcmp(valor, raiz->dado->poke_name) < 0) {
+            raiz->esq = remover_avl(raiz->esq, valor, diminuiu);
+            if(*diminuiu) {
+                switch (raiz->fb)
+                {
+                case 0:
+                    raiz->fb = 1;
+                    *diminuiu = 0;
+                break;
+                case 1:
+                    if(raiz->dir->fb == 0) {
+                        *diminuiu = 0;
+                    } else *diminuiu = 1;
+                    return rotacao(raiz);
+                break;
+                case -1:
+                    raiz->fb = 0;
+                    *diminuiu = 1;
+                break;
+                default:
+                    break;
+                }
+            }
+        }
+        if (strcmp(valor, raiz->dado->poke_name) > 0){
+            raiz->dir = remover_avl(raiz->dir, valor, diminuiu);
+            if(*diminuiu) {
+                switch (raiz->fb)
+                {
+                case 0:
+                    raiz->fb = -1;
+                    *diminuiu = 0;
+                break;
+                case 1:
+                    raiz->fb = 0;
+                    *diminuiu = 1;
+                break;
+                case -1:
+                    if(raiz->esq->fb == 0) {
+                        *diminuiu = 0;
+                    }else *diminuiu = 1;
+                    return rotacao(raiz);
+                break;
+                default:
+                    break;
+                }
+            }
         }
     }
-
     return raiz;
 }
 
@@ -286,27 +303,6 @@ int altura(arvore_avl raiz){
     else return dir + 1;
 }
 
-void pai(arvore_avl raiz, int chave) {
-    if (raiz == NULL){
-        printf("-1\n");
-        return;
-    }
-
-    if(raiz->esq != NULL && raiz->esq->dado->chave == chave){
-        printf("%d\n", raiz->dado->chave);
-        return;
-    }
-    else if(raiz->dir != NULL && raiz->dir->dado->chave == chave){
-        printf("%d\n", raiz->dado->chave);
-        return;
-    }
-
-    if (chave > raiz->dado->chave)
-        return pai(raiz->dir, chave);
-    else
-        return pai(raiz->esq, chave);
-}
-
 void in_order_avl(arvore_avl raiz, tabela *tab) {
 	if(raiz != NULL) {
 		in_order_avl(raiz->esq, tab);
@@ -317,7 +313,7 @@ void in_order_avl(arvore_avl raiz, tabela *tab) {
 
 void salvar_auxiliar_avl(arvore_avl raiz, FILE *arq) {
     if(raiz != NULL) {
-        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
+        fwrite(raiz->dado, sizeof(tipo_dado_avl), 1, arq);
         salvar_auxiliar_avl(raiz->esq, arq);
         salvar_auxiliar_avl(raiz->dir, arq);
     }
