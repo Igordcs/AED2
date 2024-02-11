@@ -3,7 +3,7 @@
 #include "../sgbd.h"
 
 void inicializar_rb(arvore_rb *raiz);
-void adicionar_rb (tipo_dado *valor, arvore_rb *raiz);
+void adicionar_rb (tipo_dado_rb *valor, arvore_rb *raiz);
 void remover_rb (int chave, arvore_rb *raiz);
 void rotacao_simples_direita(arvore_rb *raiz, arvore_rb pivo);
 void rotacao_simples_esquerda(arvore_rb *raiz, arvore_rb pivo);

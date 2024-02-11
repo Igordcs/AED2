@@ -23,9 +23,9 @@ typedef struct indice_avl {
 } tipo_dado_avl;
 
 typedef struct indice_rb {
-    char poke_name[80];
+    int poke_total_status;
     int indice; 
-} tipo_dado_avl;
+} tipo_dado_rb;
 
 typedef struct no_bst {
     tipo_dado *dado;
@@ -39,7 +39,7 @@ typedef struct no_avl {
 } no_avl;
 
 typedef struct no_rb {
-    tipo_dado *dado;
+    tipo_dado_rb *dado;
     cores cor;
     struct no_rb *esq, *dir, *pai;
 } no_rb;
@@ -62,7 +62,9 @@ void in_order(tabela *tab);
 void tirar_enter(char *string);
 void salvar_arquivo(tabela *tab);
 void finalizar(tabela *tabela);
-void busca(tabela *tab, arvore_avl raiz, int chave);
+void busca_bst(tabela *tab, arvore_bst raiz, int chave);
+void busca_avl(tabela *tab, arvore_avl raiz, char *nome);
+void busca_rb(tabela *tab, arvore_rb raiz, int total_status);
 void remover_indice(tabela *tabela, int chave);
 
 int inicializar_tabela(tabela *tabela);

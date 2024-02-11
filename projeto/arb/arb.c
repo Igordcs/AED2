@@ -25,7 +25,7 @@ void imprimir_elemento_rb(arvore_rb raiz, tabela * tab) {
         switch(raiz->cor){
             case PRETO:
                 printf("\x1b[30m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
-                                    raiz->dado->chave,
+                                    temp->poke_number,
                                     temp->poke_name, 
                                     temp->poke_total_status, 
                                     temp->poke_type1, 
@@ -33,7 +33,7 @@ void imprimir_elemento_rb(arvore_rb raiz, tabela * tab) {
                 break;
             case VERMELHO:
                 printf("\x1b[31m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
-                                    raiz->dado->chave,
+                                    temp->poke_number,
                                     temp->poke_name, 
                                     temp->poke_total_status, 
                                     temp->poke_type1, 
@@ -41,7 +41,7 @@ void imprimir_elemento_rb(arvore_rb raiz, tabela * tab) {
                 break;
             case DUPLO_PRETO:
                 printf("\x1b[32m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
-                                    raiz->dado->chave,
+                                    temp->poke_number,
                                     temp->poke_name, 
                                     temp->poke_total_status, 
                                     temp->poke_type1, 
@@ -183,7 +183,7 @@ void rotacao_simples_esquerda(arvore_rb *raiz, arvore_rb pivo) {
 }
 
 // o parametro raiz é um ponteiro para ponteiro
-void adicionar_rb (tipo_dado *valor, arvore_rb *raiz){
+void adicionar_rb (tipo_dado_rb *valor, arvore_rb *raiz){
     arvore_rb posicao, pai, novo;
     posicao = *raiz;
     pai = NULL;
@@ -192,7 +192,7 @@ void adicionar_rb (tipo_dado *valor, arvore_rb *raiz){
     while (posicao != NULL)
     {
         pai = posicao;
-        if(valor->chave > posicao->dado->chave) 
+        if(valor->poke_total_status > posicao->dado->poke_total_status) 
             posicao = posicao->dir;
         else
             posicao = posicao->esq;
@@ -212,7 +212,7 @@ void adicionar_rb (tipo_dado *valor, arvore_rb *raiz){
         *raiz = novo;
     } else {
         // se o novo elemento não for a raiz, é necessário fazer a ligação dele com seu pai
-        if (valor->chave > pai->dado->chave)
+        if (valor->poke_total_status > pai->dado->poke_total_status)
             pai->dir = novo;
         else
             pai->esq = novo;
@@ -222,7 +222,7 @@ void adicionar_rb (tipo_dado *valor, arvore_rb *raiz){
     ajustar(raiz, novo);
 }
 
-tipo_dado* maior_elemento(arvore_rb raiz) {
+tipo_dado_rb* maior_elemento(arvore_rb raiz) {
     if(raiz == NULL)
         return NULL;
     if(raiz->dir == NULL)
@@ -237,11 +237,11 @@ void remover_rb (int chave, arvore_rb *raiz) {
 
     while (posicao != NULL)
     {
-        if (chave == posicao->dado->chave) {
+        if (chave == posicao->dado->poke_total_status) {
             // ELEMENTO POSSUI DOIS FILHOS, LOGO, SUBSTITUI O VALOR PELO SUCESSOR E APAGA O SUCESSOR.
             if(posicao->esq != NULL && posicao->dir != NULL) {
                 posicao->dado = maior_elemento(posicao->esq);
-                chave = posicao->dado->chave;
+                chave = posicao->dado->poke_total_status;
             }
         
             // 1º caso: elemento não tem filho
@@ -304,7 +304,7 @@ void remover_rb (int chave, arvore_rb *raiz) {
                 break;
             }
         }
-        if(chave > posicao->dado->chave)
+        if(chave > posicao->dado->poke_total_status)
             posicao = posicao->dir;
         else
             posicao = posicao->esq;
@@ -432,7 +432,7 @@ void retira_duplo_preto(arvore_rb *raiz, arvore_rb elemento) {
 
 void salvar_auxiliar_rb(arvore_rb raiz, FILE *arq) {
     if(raiz != NULL) {
-        fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
+        fwrite(raiz->dado, sizeof(tipo_dado_rb), 1, arq);
         salvar_auxiliar_rb(raiz->esq, arq);
         salvar_auxiliar_rb(raiz->dir, arq);
     }

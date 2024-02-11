@@ -5,6 +5,7 @@
 int main(void) {
     tabela tb;
     int ret, opcao, chave;
+    char nome[80];
     ret = inicializar_tabela(&tb);
 
     while(1) {
@@ -17,11 +18,21 @@ int main(void) {
             case 2: // Imprimir elementos
                 in_order(&tb);
                 break;
-            case 3: // BUSCAR ELEMENTO
+            case 3: // BUSCAR ELEMENTO por chave (BST)
                 scanf("%d", &chave);
-                busca(&tb, tb.indice_avl, chave);
+                busca_bst(&tb, tb.indice_bst, chave);
                 break;
-            case 4: // REMOVER ELEMENTO
+            case 4: // BUSCAR ELEMENTO por nome (AVL)
+                getchar();
+                fgets(nome, 80, stdin);
+                tirar_enter(nome);
+                busca_avl(&tb, tb.indice_avl, nome);
+                break;
+            case 5: // BUSCAR ELEMENTO por status (ARB)
+                scanf("%d", &chave);
+                busca_rb(&tb, tb.indice_rb, chave);
+                break;
+            case 6: // REMOVER ELEMENTO
                 scanf("%d", &chave);
                 remover_indice(&tb, chave);
                 break;
