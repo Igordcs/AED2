@@ -55,6 +55,11 @@ typedef struct tabela {
     arvore_rb indice_rb;
 } tabela;
 
+typedef struct tab_realoc {
+    FILE *arquivo_dados;
+    arvore_bst indice_bst;
+} tab_realoc;
+
 poke_info* ler_dados();
 
 void adicionar_pokemon(tabela *tabela, poke_info *pokemon);

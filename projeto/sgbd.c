@@ -15,6 +15,15 @@
 #include "arb/arb.h"
 #include "bst/bst.h"
 
+tab_realoc retab;
+
+int existe_posicao_livre() {
+    if (retab.indice_bst == NULL)
+        return -1;
+
+    return retab.indice_bst->dado->indice;
+}
+
 void inicializar_indices(tabela *tab) {
     inicializar_avl(&tab->indice_avl);
     inicializar_rb(&tab->indice_rb);
@@ -27,6 +36,15 @@ void carregar_arquivos(tabela *tab) {
     tipo_dado_rb *temp_arb;
     FILE *arq;
     arq = fopen("indices_avl.dat", "rb");
+
+    if(retab.arquivo_dados != NULL) {
+        temp = (tipo_dado*) malloc(sizeof(tipo_dado));
+        while(fread(temp, sizeof(tipo_dado), 1, retab.arquivo_dados)) {
+            retab.indice_bst = inserir_bst(retab.indice_bst, temp);
+            temp = (tipo_dado*) malloc(sizeof(tipo_dado));
+        }
+    }
+
     if(arq != NULL) {
         int cresceu;
         temp_avl = (tipo_dado_avl*) malloc(sizeof(tipo_dado_avl));
@@ -58,28 +76,24 @@ void carregar_arquivos(tabela *tab) {
     }
 }
 
-// Carregar os valores de um arquivo "indices.dat" para cada árvore índice
-void carregar_indices(tabela *tab) {
-    carregar_arquivos(tab);
-}
-
 int inicializar_tabela(tabela *tabela) {
     inicializar_indices(tabela);
-    tabela->arquivo_dados = fopen("dados.dat", "a+b");
-    carregar_indices(tabela);
+    inicializar_bst(&retab.indice_bst);
+    tabela->arquivo_dados = fopen("dados.dat", "r+b");
+    retab.arquivo_dados = fopen("removidos.dat", "a+b");
+    carregar_arquivos(tabela);
+
+    if(tabela->arquivo_dados == NULL) {
+        tabela->arquivo_dados = fopen("dados.dat", "wb");
+        fclose(tabela->arquivo_dados);
+        tabela->arquivo_dados = fopen("dados.dat", "r+b");
+    }
 
     if (tabela->arquivo_dados != NULL)
         return 1;
     else
         return -1;
 }
-
-// void adicionar_indice(tabela *tab, tipo_dado *novo) {
-//     int cresceu;
-//     tab->indice_bst = inserir_bst(tab->indice_bst, novo);
-//     tab->indice_avl = inserir_avl(tab->indice_avl, novo, &cresceu);
-//     adicionar_rb(novo, &(tab->indice_rb));
-// }
 
 void remover_indice(tabela *tab, int chave) {
     poke_info *pokemon = (poke_info *) malloc(sizeof(poke_info));   
@@ -109,6 +123,7 @@ void remover_indice(tabela *tab, int chave) {
 
     // remove a referência ao dado nos 3 indices baseado em suas chaves
     int diminuiu;
+    retab.indice_bst = inserir_bst(retab.indice_bst, raiz->dado);
     tab->indice_bst = remover_bst(tab->indice_bst, chave);
     tab->indice_avl = remover_avl(tab->indice_avl, pokemon->poke_name, &diminuiu);
     remover_rb(pokemon->poke_total_status, &(tab->indice_rb));
@@ -142,6 +157,8 @@ void tirar_enter(char *string){
 }
 
 void in_order(tabela *tab) {
+    in_order_bst(retab.indice_bst, tab);
+    printf("\n");
 	in_order_bst(tab->indice_bst, tab);
     printf("\n");
 	in_order_avl(tab->indice_avl, tab);
@@ -159,19 +176,27 @@ void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
         strcpy(novo_avl->poke_name, pokemon->poke_name);
         novo_arb->poke_total_status = pokemon->poke_total_status;
 
-        // desloca o fluxo para o fim do arquivo
-        fseek(tab->arquivo_dados, 0L, SEEK_END);
+        // verifica se na tabela de realocação tem algum elemento
+        int posicao_livre = existe_posicao_livre();
+        if (posicao_livre != -1) 
+            fseek(tab->arquivo_dados, posicao_livre, SEEK_SET); // desloca o fluxo para uma posição livre
+        else fseek(tab->arquivo_dados, 0L, SEEK_END); // desloca o fluxo para o fim do arquivo
+
+        // atualiza os indices com a posição em que foi adicionado
         novo_dado->indice = ftell(tab->arquivo_dados);
         novo_avl->indice = ftell(tab->arquivo_dados);
         novo_arb->indice = ftell(tab->arquivo_dados);
 
+        // escreve o pokemon no arquivo tab->arquivo_dados
         fwrite(pokemon, sizeof(poke_info), 1, tab->arquivo_dados);
         int cresceu;
         // Chama a função responsável por adicionar em cada índice
         tab->indice_bst = inserir_bst(tab->indice_bst, novo_dado);
         tab->indice_avl = inserir_avl(tab->indice_avl, novo_avl, &cresceu);
         adicionar_rb(novo_arb, &(tab->indice_rb));
-        // adicionar_indice(tabela, novo_dado);
+        if (posicao_livre != -1) {
+            retab.indice_bst = remover_bst(retab.indice_bst, retab.indice_bst->dado->chave);
+        }
     }
 }
 
@@ -201,6 +226,13 @@ void salvar_arquivo(tabela *tab) {
     if(arq != NULL) {
         salvar_auxiliar_rb(tab->indice_rb, arq);
 		fclose(arq);
+    }
+    // fecha arquivo da tabela de realocação pra reescrever
+    fclose(retab.arquivo_dados);
+    arq = fopen("removidos.dat", "wb");
+    if(arq != NULL) {
+        salvar_auxiliar_bst(retab.indice_bst, arq);
+        fclose(retab.arquivo_dados);
     }
 }
 
