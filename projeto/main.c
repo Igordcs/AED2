@@ -2,6 +2,16 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+void menu() {
+    printf("1 - Adicionar Pokemon\n");
+    printf("2 - Listar Pokemons\n");
+    printf("3 - Busca Pokemon (BST)\n");
+    printf("4 - Busca Pokemon (AVL)\n");
+    printf("5 - Busca Pokemon (RB)\n");
+    printf("6 - Remover Pokemon\n");
+    printf("99 - Finalizar\n");
+}
+
 int main(void) {
     tabela tb;
     int ret, opcao, chave;
@@ -9,6 +19,7 @@ int main(void) {
     ret = inicializar_tabela(&tb);
 
     while(1) {
+        menu();
         scanf("%d", &opcao);
         switch (opcao)
         {
@@ -42,6 +53,7 @@ int main(void) {
                 break;
         
         default:
+            printf("Opcao invalida!\n");
             break;
         }
     }
