@@ -15,6 +15,15 @@
 #include "arb/arb.h"
 #include "bst/bst.h"
 
+/*
+    Retorna o tipo_dado, da posição livre pois a estratégia para ter menos linhas de código foi:
+    utilizar a mesma estrutura da bst, onde o dado->indice é onde começa o registro deletado e 
+    dado->chave é a quantidade de caracter do registro deletado.
+
+    é necessário fazer essas verificações pois se um elemento maior fosse adicionado ele "comeria"
+    boa parte do próximo registro.
+*/
+
 tab_realoc retab;
 
 tipo_dado* busca_posicao_livre(int tamanho_elemento) {
@@ -53,7 +62,7 @@ void carregar_arquivos(tabela *tab) {
     tipo_dado_avl *temp_avl;
     tipo_dado_rb *temp_arb;
     FILE *arq;
-    arq = fopen("indices_avl.dat", "rb");
+    arq = fopen("./arquivos/indices_avl.dat", "rb");
 
     if(retab.arquivo_dados != NULL) {
         temp = (tipo_dado*) malloc(sizeof(tipo_dado));
@@ -73,7 +82,7 @@ void carregar_arquivos(tabela *tab) {
         fclose(arq);
     }
 
-    arq = fopen("indices_arb.dat", "rb");
+    arq = fopen("./arquivos/indices_arb.dat", "rb");
     if(arq != NULL) {
         temp_arb = (tipo_dado_rb*) malloc(sizeof(tipo_dado_rb));
         while(fread(temp_arb, sizeof(tipo_dado_rb), 1, arq)) {
@@ -83,7 +92,7 @@ void carregar_arquivos(tabela *tab) {
         fclose(arq);
     }
 
-    arq = fopen("indices_bst.dat", "rb");
+    arq = fopen("./arquivos/indices_bst.dat", "rb");
     if(arq != NULL) {
         temp = (tipo_dado*) malloc(sizeof(tipo_dado));
         while(fread(temp, sizeof(tipo_dado), 1, arq)) {
@@ -97,14 +106,16 @@ void carregar_arquivos(tabela *tab) {
 int inicializar_tabela(tabela *tabela) {
     inicializar_indices(tabela);
     inicializar_bst(&retab.indice_bst);
-    tabela->arquivo_dados = fopen("dados.dat", "r+b");
-    retab.arquivo_dados = fopen("removidos.dat", "a+b");
+    tabela->arquivo_dados = fopen("./arquivos/dados.dat", "r+b");
+    // elementos removidos serão salvos nesse arquivo
+    retab.arquivo_dados = fopen("./arquivos/removidos.dat", "a+b"); 
     carregar_arquivos(tabela);
 
+    // Tive que utilizar o modo r+b para ler, então quando não há o arquivo, é necessário criá-lo
     if(tabela->arquivo_dados == NULL) {
-        tabela->arquivo_dados = fopen("dados.dat", "wb");
+        tabela->arquivo_dados = fopen("./arquivos/dados.dat", "wb");
         fclose(tabela->arquivo_dados);
-        tabela->arquivo_dados = fopen("dados.dat", "r+b");
+        tabela->arquivo_dados = fopen("./arquivos/dados.dat", "r+b");
     }
 
     if (tabela->arquivo_dados != NULL)
@@ -112,6 +123,11 @@ int inicializar_tabela(tabela *tabela) {
     else
         return -1;
 }
+
+/*
+    g) Implemente a função de remover registro, que remove apenas as referências ao registro nos índices,
+    sem a necessidade de modificar o arquivo de dados;
+*/
 
 void remover_indice(tabela *tab, int chave) {
     poke_info *pokemon = (poke_info *) malloc(sizeof(poke_info));   
@@ -137,11 +153,13 @@ void remover_indice(tabela *tab, int chave) {
 
     // desloca o fluxo do arquivo para onde o registro está salvo no arquivo e lê o arquivo
     fseek(tab->arquivo_dados, raiz->dado->indice, SEEK_SET);
+    // estratégia de buffer para ler o registro que vai ser removido
     char *buffer = (char *) malloc(sizeof(char) * 1024);
     fgets(buffer, 1024, tab->arquivo_dados);
     buffer = strdup(buffer);
     tirar_enter(buffer);
-    split_string(buffer, pokemon);
+    // como o registro agora é delimitado pelo caracter ',' é necessário uma estratégia para seus valores
+    split_string(buffer, pokemon); 
 
     // remove a referência ao dado nos 3 indices baseado em suas chaves
     int diminuiu;
@@ -151,6 +169,12 @@ void remover_indice(tabela *tab, int chave) {
     raiz->dado->chave = tamanho(pokemon);
     retab.indice_bst = inserir_bst(retab.indice_bst, raiz->dado);
 }
+
+/*
+    Utilização da estratégia de buffer para alocação dinâmica de strings
+    usamos o fgets() para pegar a string até o '\n' e tiramos o \n
+    Usamos strdump pra criar uma "cópia" do conteúdo verdadeiro do buffer;
+*/
 
 poke_info* ler_dados() {
     poke_info *novo = (poke_info*) malloc(sizeof(poke_info));
@@ -185,9 +209,12 @@ void tirar_enter(char *string){
     string[strlen(string) - 1] = '\0';
 }
 
+/*
+    i) Implemente uma função para exibir os registros ordenados de acordo com cada 
+    um dos índices (inorder);
+*/
+
 void in_order(tabela *tab) {
-    // in_order_bst(retab.indice_bst, tab);
-    // printf("\n");
 	in_order_bst(tab->indice_bst, tab);
     printf("\n");
 	in_order_avl(tab->indice_avl, tab);
@@ -207,19 +234,21 @@ void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
         novo_arb->poke_total_status = pokemon->poke_total_status;
         // verifica se na tabela de realocação tem algum elemento
         int qtd_caracter = tamanho(pokemon);
+        // busca por uma posição (sem uso) em que o elemento possa ser adicionado
         tipo_dado* posicao_livre = busca_posicao_livre(qtd_caracter);
         if (posicao_livre != NULL) {
-            espacos = posicao_livre->chave - qtd_caracter;
-            fseek(tab->arquivo_dados, posicao_livre->indice, SEEK_SET); // desloca o fluxo para uma posição livre
-        }
-        else fseek(tab->arquivo_dados, 0L, SEEK_END); // desloca o fluxo para o fim do arquivo
+            // cálculo de espaços brancos para substituir o elemento que antes estava nessa posição
+            espacos = posicao_livre->chave - qtd_caracter; 
+            // desloca o fluxo para uma posição livre
+            fseek(tab->arquivo_dados, posicao_livre->indice, SEEK_SET); 
+        }else fseek(tab->arquivo_dados, 0L, SEEK_END); // desloca o fluxo para o fim do arquivo
 
         // atualiza os indices com a posição em que foi adicionado
         novo_dado->indice = ftell(tab->arquivo_dados);
         novo_avl->indice = ftell(tab->arquivo_dados);
         novo_arb->indice = ftell(tab->arquivo_dados);
         
-        if(espacos > 0)
+        if(espacos > 0) // se o tamanho para adicionar o registro for maior, preenche com espaço branco
             fprintf(tab->arquivo_dados, "%*s", espacos, "");
 
         // escreve o pokemon no arquivo tab->arquivo_dados
@@ -234,7 +263,8 @@ void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
         tab->indice_bst = inserir_bst(tab->indice_bst, novo_dado);
         tab->indice_avl = inserir_avl(tab->indice_avl, novo_avl, &cresceu);
         adicionar_rb(novo_arb, &(tab->indice_rb));
-        if (posicao_livre != NULL) {
+        if (posicao_livre != NULL) { 
+            // se inseriu em uma posição livre, então tira o elemento do indice da retab
             retab.indice_bst = remover_bst(retab.indice_bst, posicao_livre->chave);
         }
     }
@@ -244,32 +274,30 @@ void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
     e) Cada índice deve ser salvo em um arquivo próprio, conforme exemplificado no projeto "arquivo 1". 
     OBS: durante a execução do programa, os índices devem ser mantidos em memória RAM, sendo passados 
     para o arquivo apenas quando o usuário escolher a opção "sair" do programa;
-
-    FEITO!!
 */  
 
 void salvar_arquivo(tabela *tab) {
     FILE *arq;
-    arq = fopen("indices_bst.dat", "wb");
+    arq = fopen("./arquivos/indices_bst.dat", "wb");
     if(arq != NULL) {
         salvar_auxiliar_bst(tab->indice_bst, arq);
 		fclose(arq);
     }
 
-    arq = fopen("indices_avl.dat", "wb");
+    arq = fopen("./arquivos/indices_avl.dat", "wb");
     if(arq != NULL) {
         salvar_auxiliar_avl(tab->indice_avl, arq);
 		fclose(arq);
     }
 
-    arq = fopen("indices_arb.dat", "wb");
+    arq = fopen("./arquivos/indices_arb.dat", "wb");
     if(arq != NULL) {
         salvar_auxiliar_rb(tab->indice_rb, arq);
 		fclose(arq);
     }
     // fecha arquivo da tabela de realocação pra reescrever
     fclose(retab.arquivo_dados);
-    arq = fopen("removidos.dat", "wb");
+    arq = fopen("./arquivos/removidos.dat", "wb");
     if(arq != NULL) {
         salvar_auxiliar_bst(retab.indice_bst, arq);
         fclose(retab.arquivo_dados);
@@ -330,6 +358,7 @@ void busca_rb(tabela *tab, arvore_rb raiz, int total_status) {
 }
 
 /*
+    Parte do ponto extra: L)
     A estratégia de separação dos campos foi delimitando-os por ','
     A função split_string(char *string, poke_info *pokemon) é responsável
     por separar cada campo, através do Strtok(string, delim) e preenche o

@@ -434,6 +434,12 @@ void retira_duplo_preto(arvore_rb *raiz, arvore_rb elemento) {
         elemento->cor = PRETO;
 }
 
+/*
+    e) Cada índice deve ser salvo em um arquivo próprio, conforme exemplificado no projeto "arquivo 1". 
+    OBS: durante a execução do programa, os índices devem ser mantidos em memória RAM, sendo passados 
+    para o arquivo apenas quando o usuário escolher a opção "sair" do programa;
+*/
+
 void salvar_auxiliar_rb(arvore_rb raiz, FILE *arq) {
     if(raiz != NULL) {
         fwrite(raiz->dado, sizeof(tipo_dado_rb), 1, arq);
@@ -441,6 +447,11 @@ void salvar_auxiliar_rb(arvore_rb raiz, FILE *arq) {
         salvar_auxiliar_rb(raiz->dir, arq);
     }
 }
+
+/*
+    i) Implemente uma função para exibir os registros ordenados de acordo com cada 
+    um dos índices (inorder);
+*/
 
 void in_order_rb(arvore_rb raiz, tabela *tab) {
 	if(raiz != NULL) {

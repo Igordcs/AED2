@@ -72,6 +72,11 @@ arvore_bst remover_bst (arvore_bst raiz, int chave) {
     return raiz;
 }
 
+/*
+    i) Implemente uma função para exibir os registros ordenados de acordo com cada 
+    um dos índices (inorder);
+*/
+
 void in_order_bst(arvore_bst raiz, tabela *tab) {
 	if(raiz != NULL) {
 		in_order_bst(raiz->esq, tab);
@@ -79,6 +84,12 @@ void in_order_bst(arvore_bst raiz, tabela *tab) {
 		in_order_bst(raiz->dir, tab);
 	}
 }
+
+/*
+    e) Cada índice deve ser salvo em um arquivo próprio, conforme exemplificado no projeto "arquivo 1". 
+    OBS: durante a execução do programa, os índices devem ser mantidos em memória RAM, sendo passados 
+    para o arquivo apenas quando o usuário escolher a opção "sair" do programa;
+*/
 
 void salvar_auxiliar_bst(arvore_bst raiz, FILE *arq) {
     if(raiz != NULL) {

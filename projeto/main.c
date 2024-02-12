@@ -12,6 +12,11 @@ void menu() {
     printf("99 - Finalizar\n");
 }
 
+/*
+    j) Implemente a função main que permite ao usuário utilizar o sistema com todas as opções
+    de funções implementadas;
+*/
+
 int main(void) {
     tabela tb;
     int ret, opcao, chave;
