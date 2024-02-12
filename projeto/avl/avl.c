@@ -189,7 +189,7 @@ arvore_avl remover_avl (arvore_avl raiz, char *valor, int *diminuiu) {
                 aux = aux->dir;
             }
             // troca o valor da raiz com o aux
-            strcpy(raiz->dado->poke_name, aux->dado->poke_name);
+            raiz->dado = aux->dado;
             strcpy(aux->dado->poke_name, valor);
             // raiz->dado->poke_name = aux->dado->poke_name;
             // aux->dado->poke_name = valor;

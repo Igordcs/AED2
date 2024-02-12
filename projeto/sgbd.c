@@ -17,7 +17,7 @@
 
 tab_realoc retab;
 
-tipo_dado* existe_posicao_livre(int tamanho_elemento) {
+tipo_dado* busca_posicao_livre(int tamanho_elemento) {
     if (retab.indice_bst == NULL)
         return NULL;
     if(tamanho_elemento > retab.indice_bst->dado->chave) {
@@ -200,24 +200,30 @@ void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
         tipo_dado *novo_dado = (tipo_dado *) malloc(sizeof(tipo_dado));
         tipo_dado_avl *novo_avl = (tipo_dado_avl *) malloc(sizeof(tipo_dado_avl));
         tipo_dado_rb *novo_arb = (tipo_dado_rb *) malloc(sizeof(tipo_dado_rb));
+        int espacos = 0;
         // copia o conteúdo de pokemon->pokename para o novo_avl
         novo_dado->chave = pokemon->poke_number;
         strcpy(novo_avl->poke_name, pokemon->poke_name);
         novo_arb->poke_total_status = pokemon->poke_total_status;
         // verifica se na tabela de realocação tem algum elemento
         int qtd_caracter = tamanho(pokemon);
-        tipo_dado* posicao_livre = existe_posicao_livre(qtd_caracter);
-        if (posicao_livre != NULL) 
+        tipo_dado* posicao_livre = busca_posicao_livre(qtd_caracter);
+        if (posicao_livre != NULL) {
+            espacos = posicao_livre->chave - qtd_caracter;
             fseek(tab->arquivo_dados, posicao_livre->indice, SEEK_SET); // desloca o fluxo para uma posição livre
+        }
         else fseek(tab->arquivo_dados, 0L, SEEK_END); // desloca o fluxo para o fim do arquivo
 
         // atualiza os indices com a posição em que foi adicionado
         novo_dado->indice = ftell(tab->arquivo_dados);
         novo_avl->indice = ftell(tab->arquivo_dados);
         novo_arb->indice = ftell(tab->arquivo_dados);
+        
+        if(espacos > 0)
+            fprintf(tab->arquivo_dados, "%*s", espacos, "");
 
         // escreve o pokemon no arquivo tab->arquivo_dados
-        int r = fprintf(tab->arquivo_dados, "%d,%s,%s,%s,%d\n", 
+        fprintf(tab->arquivo_dados, "%d,%s,%s,%s,%d\n",
                                     pokemon->poke_number, 
                                     pokemon->poke_name,
                                     pokemon->poke_type1,

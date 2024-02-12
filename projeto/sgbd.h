@@ -18,7 +18,7 @@ typedef struct indice {
 } tipo_dado;
 
 typedef struct indice_avl {
-    char poke_name[80];
+    char poke_name[80]  ;
     int indice; 
 } tipo_dado_avl;
 
