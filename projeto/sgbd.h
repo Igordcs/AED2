@@ -7,9 +7,9 @@ typedef enum cores {VERMELHO, PRETO, DUPLO_PRETO} cores;
 typedef struct poke_info {
     int poke_number;
     int poke_total_status;
-    char poke_name[80];
-    char poke_type1[36];
-    char poke_type2[36];
+    char *poke_name;
+    char *poke_type1;
+    char *poke_type2;
 } poke_info;
 
 typedef struct indice {
@@ -71,6 +71,7 @@ void busca_bst(tabela *tab, arvore_bst raiz, int chave);
 void busca_avl(tabela *tab, arvore_avl raiz, char *nome);
 void busca_rb(tabela *tab, arvore_rb raiz, int total_status);
 void remover_indice(tabela *tabela, int chave);
+void split_string(char *string, poke_info *pokemon);
 
 int inicializar_tabela(tabela *tabela);
 

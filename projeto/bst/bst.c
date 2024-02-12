@@ -1,5 +1,6 @@
 #include "bst.h"
 #include <stdlib.h>
+#include <string.h>
 
 void inicializar_bst (arvore_bst *raiz) {
     *raiz = NULL;
@@ -92,16 +93,40 @@ void imprimir_elemento_bst(arvore_bst raiz, tabela * tab) {
     temp->poke_number = 1000;
     printf("Indice: %d\n", raiz->dado->indice);
     fseek(tab->arquivo_dados, raiz->dado->indice, SEEK_SET);
-
-    int r = fread(temp, sizeof(poke_info), 1, tab->arquivo_dados);
-	if(r != EOF)
-        printf("[%d, %s, %d, %s, %s]\n", r, 
-                                    temp->poke_name, 
-                                    temp->poke_total_status, 
-                                    temp->poke_type1, 
-                                    temp->poke_type2);
-    else
-        printf("Falha ao ler dados");
-
+    
+    // Cria um buffer de tamanho 1024 pra ler os registros
+    char *dado = (char *) malloc(sizeof(char) * 1024);
+    if (fgets(dado, 1024, tab->arquivo_dados) != NULL) {
+        // força a liberar espaço na string
+        dado = strdup(dado);
+        tirar_enter(dado); // fgets lê com o \n, então é necessário retirar
+        split_string(dado, temp); // separa os campos pela ',' e preenche por referencia temp
+        printf("[%d, %s, %s, %s, %d]\n",temp->poke_number,
+                                        temp->poke_name,  
+                                        temp->poke_type1, 
+                                        temp->poke_type2,
+                                        temp->poke_total_status);
+        free(dado);
+    }else printf("Falha ao ler dados");
 	free(temp);
+}
+
+tipo_dado* indice_sucessor(arvore_bst raiz, int tamanho) {
+    arvore_bst atual = raiz;
+    arvore_bst sucessor = NULL;
+
+    while (atual != NULL) {
+        if (atual->dado->chave > tamanho) {
+            sucessor = atual;
+            atual = atual->esq;
+        } else {
+            atual = atual->dir;
+        }
+    }
+
+    if (sucessor == NULL) {
+        return NULL;  // Não há sucessor
+    } else {
+        return sucessor->dado;
+    }
 }

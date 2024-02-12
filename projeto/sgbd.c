@@ -17,11 +17,29 @@
 
 tab_realoc retab;
 
-int existe_posicao_livre() {
+tipo_dado* existe_posicao_livre(int tamanho_elemento) {
     if (retab.indice_bst == NULL)
-        return -1;
+        return NULL;
+    if(tamanho_elemento > retab.indice_bst->dado->chave) {
+        // encontra o sucessor do tamanho_elemento
+        tipo_dado* sucessor = indice_sucessor(retab.indice_bst, tamanho_elemento);
+        if(sucessor == NULL)
+            return NULL;
+        
+        return sucessor;
+    }
+    return retab.indice_bst->dado;
+}
 
-    return retab.indice_bst->dado->indice;
+int tamanho (poke_info *pokemon) {
+    char *buffer = (char *) malloc(sizeof(char) * 1024);
+    int qtd_caracter = sprintf(buffer, "%d,%s,%s,%s,%d\n", pokemon->poke_number,
+                                                        pokemon->poke_name,
+                                                        pokemon->poke_type1,
+                                                        pokemon->poke_type2,
+                                                        pokemon->poke_total_status);
+    free(buffer);
+    return qtd_caracter;
 }
 
 void inicializar_indices(tabela *tab) {
@@ -119,30 +137,41 @@ void remover_indice(tabela *tab, int chave) {
 
     // desloca o fluxo do arquivo para onde o registro está salvo no arquivo e lê o arquivo
     fseek(tab->arquivo_dados, raiz->dado->indice, SEEK_SET);
-    int r = fread(pokemon, sizeof(poke_info), 1, tab->arquivo_dados);
+    char *buffer = (char *) malloc(sizeof(char) * 1024);
+    fgets(buffer, 1024, tab->arquivo_dados);
+    buffer = strdup(buffer);
+    tirar_enter(buffer);
+    split_string(buffer, pokemon);
 
     // remove a referência ao dado nos 3 indices baseado em suas chaves
     int diminuiu;
-    retab.indice_bst = inserir_bst(retab.indice_bst, raiz->dado);
     tab->indice_bst = remover_bst(tab->indice_bst, chave);
     tab->indice_avl = remover_avl(tab->indice_avl, pokemon->poke_name, &diminuiu);
     remover_rb(pokemon->poke_total_status, &(tab->indice_rb));
+    raiz->dado->chave = tamanho(pokemon);
+    retab.indice_bst = inserir_bst(retab.indice_bst, raiz->dado);
 }
 
 poke_info* ler_dados() {
     poke_info *novo = (poke_info*) malloc(sizeof(poke_info));
+    char *buffer = (char *) malloc(sizeof(char) * 256);
+
     getchar();
     printf("Nome: ");
-    fgets(novo->poke_name, 80, stdin);
-    tirar_enter(novo->poke_name);
+    fgets(buffer, 255, stdin);
+    tirar_enter(buffer);
+    novo->poke_name = strdup(buffer);
 
     printf("Tipo: ");
-    fgets(novo->poke_type1, 36, stdin);
-    tirar_enter(novo->poke_type1);
+    fgets(buffer, 255, stdin);
+    tirar_enter(buffer);
+    novo->poke_type1 = strdup(buffer);
 
     printf("Segundo Tipo: ");
-    fgets(novo->poke_type2, 36, stdin);
-    tirar_enter(novo->poke_type2);
+    fgets(buffer, 255, stdin);
+    tirar_enter(buffer);
+    novo->poke_type2 = strdup(buffer);
+    free(buffer);
 
     printf("Total Status: ");
     scanf("%d", &novo->poke_total_status);
@@ -157,8 +186,8 @@ void tirar_enter(char *string){
 }
 
 void in_order(tabela *tab) {
-    in_order_bst(retab.indice_bst, tab);
-    printf("\n");
+    // in_order_bst(retab.indice_bst, tab);
+    // printf("\n");
 	in_order_bst(tab->indice_bst, tab);
     printf("\n");
 	in_order_avl(tab->indice_avl, tab);
@@ -175,11 +204,11 @@ void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
         novo_dado->chave = pokemon->poke_number;
         strcpy(novo_avl->poke_name, pokemon->poke_name);
         novo_arb->poke_total_status = pokemon->poke_total_status;
-
         // verifica se na tabela de realocação tem algum elemento
-        int posicao_livre = existe_posicao_livre();
-        if (posicao_livre != -1) 
-            fseek(tab->arquivo_dados, posicao_livre, SEEK_SET); // desloca o fluxo para uma posição livre
+        int qtd_caracter = tamanho(pokemon);
+        tipo_dado* posicao_livre = existe_posicao_livre(qtd_caracter);
+        if (posicao_livre != NULL) 
+            fseek(tab->arquivo_dados, posicao_livre->indice, SEEK_SET); // desloca o fluxo para uma posição livre
         else fseek(tab->arquivo_dados, 0L, SEEK_END); // desloca o fluxo para o fim do arquivo
 
         // atualiza os indices com a posição em que foi adicionado
@@ -188,14 +217,19 @@ void adicionar_pokemon(tabela *tab, poke_info *pokemon) {
         novo_arb->indice = ftell(tab->arquivo_dados);
 
         // escreve o pokemon no arquivo tab->arquivo_dados
-        fwrite(pokemon, sizeof(poke_info), 1, tab->arquivo_dados);
+        int r = fprintf(tab->arquivo_dados, "%d,%s,%s,%s,%d\n", 
+                                    pokemon->poke_number, 
+                                    pokemon->poke_name,
+                                    pokemon->poke_type1,
+                                    pokemon->poke_type2,
+                                    pokemon->poke_total_status);
         int cresceu;
         // Chama a função responsável por adicionar em cada índice
         tab->indice_bst = inserir_bst(tab->indice_bst, novo_dado);
         tab->indice_avl = inserir_avl(tab->indice_avl, novo_avl, &cresceu);
         adicionar_rb(novo_arb, &(tab->indice_rb));
-        if (posicao_livre != -1) {
-            retab.indice_bst = remover_bst(retab.indice_bst, retab.indice_bst->dado->chave);
+        if (posicao_livre != NULL) {
+            retab.indice_bst = remover_bst(retab.indice_bst, posicao_livre->chave);
         }
     }
 }
@@ -287,4 +321,42 @@ void busca_rb(tabela *tab, arvore_rb raiz, int total_status) {
         busca_rb(tab, raiz->dir, total_status);
     else
         busca_rb(tab, raiz->esq, total_status);
+}
+
+/*
+    A estratégia de separação dos campos foi delimitando-os por ','
+    A função split_string(char *string, poke_info *pokemon) é responsável
+    por separar cada campo, através do Strtok(string, delim) e preenche o
+    struct pokemon passado por referência.
+
+    o switch deve seguir a ordem lógica de como foi adicionado
+*/
+void split_string(char *string, poke_info *pokemon) {
+    int contador = 0;
+    char *token = strtok(string, ",");
+    while(token != NULL) {
+        switch (contador)
+        {
+            case 0:
+                pokemon->poke_number = atoi(token);
+                break;
+            case 1:
+                pokemon->poke_name = strdup(token);
+                break;
+            case 2:
+                pokemon->poke_type1 = strdup(token);
+                break;
+            case 3:
+                pokemon->poke_type2 = strdup(token);
+                break;
+            case 4:
+                pokemon->poke_total_status = atoi(token);
+                break;
+        
+            default:
+                break;
+        }
+        token = strtok(NULL, ",");
+        contador++;
+    }
 }

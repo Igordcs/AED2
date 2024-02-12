@@ -1,6 +1,7 @@
 #include "arb.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 arvore_rb no_null;
 
@@ -20,37 +21,40 @@ void imprimir_elemento_rb(arvore_rb raiz, tabela * tab) {
     printf("Indice: %d\n", raiz->dado->indice);
     fseek(tab->arquivo_dados, raiz->dado->indice, SEEK_SET);
 
-    int r = fread(temp, sizeof(poke_info), 1, tab->arquivo_dados);
-	if(r != EOF) {
+    // Cria um buffer de tamanho 1024 pra ler os registros
+    char *dado = (char *) malloc(sizeof(char) * 1024);
+    if (fgets(dado, 1024, tab->arquivo_dados) != NULL) {
+        // força a liberar espaço na string
+        dado = strdup(dado);
+        tirar_enter(dado); // fgets lê com o \n, então é necessário retirar
+        split_string(dado, temp); // separa os campos pela ',' e preenche por referencia temp
         switch(raiz->cor){
             case PRETO:
-                printf("\x1b[30m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
-                                    temp->poke_number,
-                                    temp->poke_name, 
-                                    temp->poke_total_status, 
-                                    temp->poke_type1, 
-                                    temp->poke_type2);
+                printf("\x1b[30m[%d, %s, %s, %s, %d]\x1b[0m\n",
+                                                temp->poke_number,
+                                                temp->poke_name, 
+                                                temp->poke_type1,
+                                                temp->poke_type2,
+                                                temp->poke_total_status);
                 break;
             case VERMELHO:
-                printf("\x1b[31m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
-                                    temp->poke_number,
-                                    temp->poke_name, 
-                                    temp->poke_total_status, 
-                                    temp->poke_type1, 
-                                    temp->poke_type2);
+                printf("\x1b[31m[%d, %s, %s, %s, %d]\x1b[0m\n",
+                                                temp->poke_number,
+                                                temp->poke_name, 
+                                                temp->poke_type1,
+                                                temp->poke_type2,
+                                                temp->poke_total_status);
                 break;
             case DUPLO_PRETO:
-                printf("\x1b[32m[%d, %d, %s, %d, %s, %s]\x1b[0m\n", r,
-                                    temp->poke_number,
-                                    temp->poke_name, 
-                                    temp->poke_total_status, 
-                                    temp->poke_type1, 
-                                    temp->poke_type2);
+                printf("\x1b[32m[%d, %s, %s, %s, %d]\x1b[0m\n", temp->poke_number,
+                                                temp->poke_name, 
+                                                temp->poke_type1,
+                                                temp->poke_type2,
+                                                temp->poke_total_status);
                 break;
         }
-    }
-    else
-        printf("Falha ao ler dados");
+        free(dado);
+    }else printf("Falha ao ler dados");
 
 	free(temp);
 }
