@@ -257,14 +257,6 @@ arvore_avl remover_avl (arvore_avl raiz, char *valor, int *diminuiu) {
     return raiz;
 }
 
-void reverso(arvore_avl raiz){
-    if(raiz != NULL) {
-        reverso(raiz->dir);
-        printf("[%d]", raiz->dado);
-        reverso(raiz->esq);
-    }
-}
-
 void preorder(arvore_avl raiz){
     //caso indutivo...
     if(raiz != NULL) {

@@ -72,6 +72,7 @@ void busca_avl(tabela *tab, arvore_avl raiz, char *nome);
 void busca_rb(tabela *tab, arvore_rb raiz, int total_status);
 void remover_indice(tabela *tabela, int chave);
 void split_string(char *string, poke_info *pokemon);
+void imprimir_elemento_bst(arvore_bst raiz, tabela * tab);
 
 int inicializar_tabela(tabela *tabela);
 
